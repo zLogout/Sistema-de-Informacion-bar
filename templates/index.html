@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es"><head>
 <meta charset="utf-8">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 <title>[NOMBRE DEL BAR] – Bar en el Corredor Ecológico, Villavicencio</title>
 
 <meta name="hz:slide-selector" content="[data-canvas-width]"><meta name="hz:canvas-width" content="1360"><meta name="hz:canvas-height" content="3100"></head>
@@ -86,5 +86,5 @@
 
 
 
-<script src="script.js"></script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body></html>
