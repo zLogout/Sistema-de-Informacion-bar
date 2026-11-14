@@ -9,6 +9,11 @@ def home():
     # Renderiza tu página principal ubicada en la carpeta 'templates'
     return render_template('index.html')
 
+@app.route("/reservas", methods=["GET"])
+def mostrar_reservas():
+    return render_template("reservas.html")
+
+
 @app.route("/reservas", methods=["POST"])
 def guardar_reserva():
     None

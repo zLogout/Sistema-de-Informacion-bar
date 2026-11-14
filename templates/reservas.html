@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reserva en línea</title>
+  <link rel="stylesheet" href="/css/js/styles.css">
+</head>
+<body>
+  <main class="booking-page">
+    <div class="booking-container">
+      <a class="back-link" href="{{ url_for('home') }}">&larr; Volver al inicio</a>
+
+      <section class="booking-card" aria-labelledby="booking-title">
+        <p class="eyebrow">Corredor Ecológico · Villavicencio</p>
+        <h1 id="booking-title">Reserva tu mesa</h1>
+        <p class="lead">Déjanos tus datos y los detalles de tu visita.</p>
+
+        <form class="booking-form" action="{{ url_for('guardar_reserva') }}" method="post">
+          <div class="field field-full">
+            <label for="nombre">Nombre</label>
+            <input id="nombre" name="nombre" type="text" autocomplete="name" maxlength="100" required>
+          </div>
+
+          <div class="field field-full">
+            <label for="whatsapp">Número de WhatsApp</label>
+            <input id="whatsapp" name="whatsapp" type="tel" autocomplete="tel" maxlength="20" required>
+          </div>
+
+          <div class="field">
+            <label for="fecha">Fecha</label>
+            <input id="fecha" name="fecha" type="date" required>
+          </div>
+
+          <div class="field">
+            <label for="hora">Hora</label>
+            <input id="hora" name="hora" type="time" required>
+          </div>
+
+          <div class="field field-full">
+            <label for="personas">Número de personas</label>
+            <input id="personas" name="personas" type="number" min="1" value="2" required>
+          </div>
+
+          <button class="btn pri booking-submit" type="submit">Enviar solicitud de reserva</button>
+        </form>
+
+        <p class="booking-note">La reserva queda sujeta a confirmación del bar.</p>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
