@@ -14,7 +14,7 @@
 
 - 🐍 Python
 - 🌶️ Flask
-- 🎨 HTML y CSS
+- 🎨 HTML,CSS & JavaScript
 - ▲ Vercel para el despliegue
 
 ## 📂 Estructura del proyecto
