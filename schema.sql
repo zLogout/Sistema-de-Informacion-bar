@@ -44,4 +44,9 @@ CREATE TABLE IF NOT EXISTS detalle_venta (
     producto_id INTEGER NOT NULL REFERENCES productos(id),
     cantidad INTEGER NOT NULL CHECK (cantidad > 0),
     precio_unitario NUMERIC(10,2) NOT NULL
+CREATE TABLE IF NOT EXISTS usuarios (
+    id SERIAL PRIMARY KEY,
+    username TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    rol TEXT NOT NULL DEFAULT 'admin'
 );
