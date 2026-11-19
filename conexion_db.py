@@ -67,11 +67,58 @@ def crear_reserva(conn, nombre, whatsapp, fecha, hora, personas):
 def listar_reservas(conn):
     return conn.execute("SELECT * FROM reservas ORDER BY fecha, hora").fetchall()
 
+# --- FUNCIONES DE USUARIOS / ADMIN ---
+def crear_admin_por_defecto(conn):
+    # Crea un usuario admin inicial si no existe
+    conn.execute(
+        "INSERT INTO usuarios (username, password, rol) VALUES (%s, %s, %s) ON CONFLICT (username) DO NOTHING",
+        ("admin", "admin123", "admin")
+    )
+    conn.commit()
 
+def verificar_usuario(conn, username, password):
+    return conn.execute(
+        "SELECT * FROM usuarios WHERE username = %s AND password = %s",
+        (username, password)
+    ).fetchone()
+
+# --- FUNCIONES CRUD DE PRODUCTOS ---
+def listar_productos_admin(conn):
+    sql = """
+    SELECT p.id, c.id AS categoria_id, c.nombre AS categoria, p.nombre, p.precio::float AS precio, p.stock
+    FROM productos p
+    JOIN categorias c ON c.id = p.categoria_id
+    ORDER BY p.id ASC
+    """
+    return conn.execute(sql).fetchall()
+
+def listar_categorias(conn):
+    return conn.execute("SELECT * FROM categorias ORDER BY id ASC").fetchall()
+
+def agregar_producto(conn, categoria_id, nombre, precio, stock):
+    conn.execute(
+        "INSERT INTO productos (categoria_id, nombre, precio, stock) VALUES (%s, %s, %s, %s)",
+        (categoria_id, nombre, precio, stock)
+    )
+    conn.commit()
+
+def editar_producto(conn, producto_id, categoria_id, nombre, precio, stock):
+    conn.execute(
+        """UPDATE productos 
+           SET categoria_id = %s, nombre = %s, precio = %s, stock = %s 
+           WHERE id = %s""",
+        (categoria_id, nombre, precio, stock, producto_id)
+    )
+    conn.commit()
+
+def eliminar_producto(conn, producto_id):
+    conn.execute("DELETE FROM productos WHERE id = %s", (producto_id,))
+    conn.commit()
 if __name__ == "__main__":
     with conectar() as conn:
         crear_tablas(conn)
         cargar_carta(conn)
+        crear_admin_por_defecto(conn)
         print("Conexión exitosa a Neon. Carta:")
         for fila in listar_carta(conn):
             print(f"  {fila['categoria']:<18} {fila['producto']:<24} ${fila['precio']:,.0f}")
