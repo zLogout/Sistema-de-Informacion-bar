@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from conexion_db import (
     crear_tablas, cargar_carta, conectar, crear_reserva, listar_carta, listar_reservas,
-    verificar_usuario, listar_productos_admin, listar_categorias,
+    crear_admin_por_defecto, verificar_usuario, listar_productos_admin, listar_categorias,
     agregar_producto, editar_producto, eliminar_producto
 )
 
@@ -27,18 +27,23 @@ def login():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
-        
-        with conectar() as conn:
-            usuario = verificar_usuario(conn, username, password)
-            
-        if usuario:
-            session["usuario_id"] = usuario["id"]
-            session["username"] = usuario["username"]
-            session["rol"] = usuario["rol"]
-            return redirect(url_for("panel_admin"))
-        else:
-            error = "Usuario o contraseña incorrectos."
-            
+
+        try:
+            with conectar() as conn:
+                crear_tablas(conn)
+                crear_admin_por_defecto(conn)
+                usuario = verificar_usuario(conn, username, password)
+
+            if usuario:
+                session["usuario_id"] = usuario["id"]
+                session["username"] = usuario["username"]
+                session["rol"] = usuario["rol"]
+                return redirect(url_for("panel_admin"))
+            else:
+                error = "Usuario o contraseña incorrectos."
+        except Exception as e:
+            error = f"Error de conexión con la base de datos: {e}"
+
     return render_template("login.html", error=error)
 
 @app.route("/logout")
