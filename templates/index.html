@@ -27,24 +27,23 @@
 <p class="eyebrow">Nuestra carta</p>
 <h2>Lo que vas a pedir esta noche.</h2>
 <p class="lead">Precios actualizados, los mismos en la barra y en la caja.</p>
+{% if carta %}
 <div class="grid">
-<div class="card"><h3>Cervezas</h3>
-<div class="item"><span>Cerveza nacional</span><span>[PRECIO]</span></div>
-<div class="item"><span>Cerveza importada</span><span>[PRECIO]</span></div>
-<div class="item"><span>Cerveza artesanal</span><span>[PRECIO]</span></div></div>
-<div class="card"><h3>Cócteles</h3>
-<div class="item"><span>Cóctel de la casa</span><span>[PRECIO]</span></div>
-<div class="item"><span>Clásico de barra</span><span>[PRECIO]</span></div>
-<div class="item"><span>Cóctel sin alcohol</span><span>[PRECIO]</span></div></div>
-<div class="card"><h3>Licores</h3>
-<div class="item"><span>Aguardiente</span><span>[PRECIO]</span></div>
-<div class="item"><span>Ron</span><span>[PRECIO]</span></div>
-<div class="item"><span>Whisky</span><span>[PRECIO]</span></div>
-<div class="item"><span>Tequila</span><span>[PRECIO]</span></div></div>
-<div class="card"><h3>Botellas y combos</h3>
-<div class="item"><span>Botella para la mesa</span><span>[PRECIO]</span></div>
-<div class="item"><span>Combo para grupos</span><span>[PRECIO]</span></div></div>
-</div></div></section>
+{% for categoria, productos in carta|groupby('categoria') %}
+<div class="card"><h3>{{ categoria }}</h3>
+{% for producto in productos %}
+<div class="item">
+<span>{{ producto.producto }}{% if producto.stock <= 0 %}<small class="item-status">Agotado</small>{% endif %}</span>
+<span>{{ "$" ~ "{:,.0f}".format(producto.precio) }}</span>
+</div>
+{% endfor %}
+</div>
+{% endfor %}
+</div>
+{% else %}
+<p class="lead carta-vacia">La carta estará disponible pronto.</p>
+{% endif %}
+</div></section>
 
 <section class="sec alt" id="por-que"><div class="w">
 <p class="eyebrow">Por qué venir</p>

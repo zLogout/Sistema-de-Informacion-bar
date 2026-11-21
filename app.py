@@ -10,7 +10,9 @@ app.secret_key = "clave_super_secreta_del_bar"
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    with conectar() as conn:
+        carta = listar_carta(conn)
+    return render_template('index.html', carta=carta)
 
 @app.route("/reservas", methods=["GET"])
 def mostrar_reservas():
