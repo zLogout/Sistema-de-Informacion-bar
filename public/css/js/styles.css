@@ -240,7 +240,7 @@ p{margin:0}
 .alt .card{background:#0E0D12}
 .item{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px dashed #3A3548;color:#D8D3E4;font-size:15px}
 .item span:last-child{color:#F2A33A;white-space:nowrap}
-.btn{display:inline-block;padding:15px 30px;border-radius:999px;font-weight:600;text-decoration:none}
+.btn{display:inline-block;padding: 10px 22px;;border-radius:999px;font-weight:600;text-decoration:none}
 .pri{background:#FF4D8D;color:#0E0D12}.pri:hover{background:#FF8AB4;color:#0E0D12}
 .ghost{border:1px solid #6A6480;color:#F1EEF5}.ghost:hover{color:#F2A33A;border-color:#F2A33A}
 .nav{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;padding:20px 0}
