@@ -33,6 +33,8 @@ def login():
                 crear_tablas(conn)
                 crear_admin_por_defecto(conn)
                 usuario = verificar_usuario(conn, username, password)
+                if usuario:
+                    cargar_carta(conn)
 
             if usuario:
                 session["usuario_id"] = usuario["id"]
