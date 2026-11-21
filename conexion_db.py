@@ -22,7 +22,10 @@ def conectar():
 
 
 def crear_tablas(conn):
-    conn.execute(SCHEMA_PATH.read_text(encoding="utf-8"))
+    schema = SCHEMA_PATH.read_text(encoding="utf-8")
+    for statement in schema.split(";"):
+        if statement.strip():
+            conn.execute(statement)
     conn.commit()
 
 
