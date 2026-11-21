@@ -5,7 +5,7 @@ from conexion_db import (
     agregar_producto, editar_producto, eliminar_producto
 )
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="public", static_url_path="")
 app.secret_key = "clave_super_secreta_del_bar"
 
 @app.route('/')
