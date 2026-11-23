@@ -2,7 +2,7 @@
   min-height: 100vh;
   padding: 32px 24px;
   box-sizing: border-box;
-  background: radial-gradient(ellipse at 80% 10%, #4A1B3C 0%, #0E0D12 58%);
+  background: radial-gradient(ellipse at 80% 10%, #4A3510 0%, #0B0905 58%);
 }
 
 .login-container {
@@ -13,18 +13,18 @@
 .login-back {
   display: inline-block;
   margin: 8px 0 24px;
-  color: #F1EEF5;
+  color: #FFF8E5;
   text-decoration: none;
 }
 
 .login-back:hover {
-  color: #F2A33A;
+  color: #FFD43B;
 }
 
 .login-card {
   padding: clamp(24px, 6vw, 40px);
-  background: #1C1A24;
-  border: 1px solid #302C3C;
+  background: #171107;
+  border: 1px solid #513A13;
   border-radius: 18px;
 }
 
@@ -45,7 +45,7 @@
 }
 
 .login-field label {
-  color: #D8D3E4;
+  color: #E6DABC;
   font-size: 14px;
   font-weight: 600;
 }
@@ -55,15 +55,15 @@
   min-height: 48px;
   padding: 10px 12px;
   box-sizing: border-box;
-  color: #F1EEF5;
-  background: #0E0D12;
-  border: 1px solid #4A4558;
+  color: #FFF8E5;
+  background: #0B0905;
+  border: 1px solid #745A20;
   border-radius: 8px;
   font: inherit;
 }
 
 .login-field input:focus {
-  outline: 2px solid #FF4D8D;
+  outline: 2px solid #FFD43B;
   outline-offset: 2px;
 }
 
@@ -78,8 +78,8 @@
   margin-top: 24px;
   padding: 12px 14px;
   color: #FFD6DF;
-  background: #4A1B3C;
-  border: 1px solid #7C3158;
+  background: #4A3510;
+  border: 1px solid #745A20;
   border-radius: 8px;
 }
 
