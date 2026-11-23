@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Reserva en Los Girasoles</title>
-  <link rel="stylesheet" href="/css/js/styles.css">
+  <link rel="stylesheet" href="/css/js/styles.css?v=7">
 </head>
 <body>
   <main class="booking-page">
@@ -15,6 +15,12 @@
         <p class="eyebrow">Los Girasoles · Cerca de la Unillanos, Villavicencio</p>
         <h1 id="booking-title">Reserva tu mesa</h1>
         <p class="lead">Déjanos tus datos y los detalles de tu visita.</p>
+
+        {% if error %}
+          <p class="booking-message booking-error" role="alert">{{ error }}</p>
+        {% elif reservada %}
+          <p class="booking-message booking-success" role="status">¡Listo! Recibimos tu solicitud de reserva.</p>
+        {% endif %}
 
         <form class="booking-form" action="{{ url_for('guardar_reserva') }}" method="post">
           <div class="field field-full">

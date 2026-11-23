@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Clientes y reportes - Los Girasoles</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 24px; background: #0B0905; color: #FFF8E5; font-family: sans-serif; }
+        main { width: min(100%, 1100px); margin: 0 auto; }
+        a { color: #FFD43B; }
+        .top-bar, .toolbar, .summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+        .top-bar { margin-bottom: 24px; }
+        .card { padding: 20px; margin-bottom: 20px; background: #171107; border: 1px solid #513A13; border-radius: 12px; }
+        .toolbar { flex-wrap: wrap; }
+        label { display: block; margin-bottom: 6px; color: #CFC2A3; }
+        select, button { min-height: 40px; padding: 8px 12px; border: 1px solid #745A20; border-radius: 8px; font: inherit; }
+        select { color: #FFF8E5; background: #0B0905; }
+        button { cursor: pointer; color: #161006; background: #FFD43B; border: 0; font-weight: 700; }
+        .summary { justify-content: flex-start; flex-wrap: wrap; }
+        .summary strong { color: #FFD43B; }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; border-bottom: 1px solid #513A13; text-align: left; }
+        th { color: #FFD43B; }
+        .empty { color: #CFC2A3; }
+        @media (max-width: 600px) {
+            body { padding: 16px; }
+            .top-bar { align-items: flex-start; flex-direction: column; }
+            .toolbar { align-items: flex-start; flex-direction: column; }
+        }
+        @media print {
+            body { padding: 0; color: #111; background: #fff; }
+            .toolbar, .back-link { display: none; }
+            .card { background: #fff; border: 1px solid #aaa; }
+            th { color: #111; }
+            th, td { border-color: #aaa; }
+            .summary strong { color: #111; }
+            a { color: #111; text-decoration: none; }
+        }
+    </style>
+</head>
+<body>
+<main>
+    <header class="top-bar">
+        <div>
+            <a class="back-link" href="{{ url_for('panel_admin') }}">&larr; Volver al panel</a>
+            <h1>Clientes y reportes</h1>
+            <p>Clientes registrados a través de las reservas de Los Girasoles.</p>
+        </div>
+        <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+    </header>
+
+    <section class="card toolbar">
+        <form action="{{ url_for('modulo_clientes') }}" method="get">
+            <label for="periodo">Periodo del reporte</label>
+            <select id="periodo" name="periodo">
+                <option value="todos" {% if periodo == 'todos' %}selected{% endif %}>Todo el historial</option>
+                <option value="semana" {% if periodo == 'semana' %}selected{% endif %}>Semana actual</option>
+                <option value="mes" {% if periodo == 'mes' %}selected{% endif %}>Mes actual</option>
+                <option value="año" {% if periodo == 'año' %}selected{% endif %}>Año actual</option>
+            </select>
+            <button type="submit">Ver reporte</button>
+        </form>
+        <button type="button" onclick="window.print()">Imprimir reporte</button>
+    </section>
+
+    <section class="card">
+        <h2>{{ periodo_nombre }}{% if fecha_inicio %} · {{ fecha_inicio.strftime('%d/%m/%Y') }} - {{ fecha_fin.strftime('%d/%m/%Y') }}{% endif %}</h2>
+        <div class="summary">
+            <span>Clientes: <strong>{{ clientes|length }}</strong></span>
+            <span>Reservas: <strong>{{ total_reservas }}</strong></span>
+            <span>Personas reservadas: <strong>{{ total_personas }}</strong></span>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>WhatsApp</th>
+                        <th>Reservas</th>
+                        <th>Personas</th>
+                        <th>Última visita</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cliente in clientes %}
+                    <tr>
+                        <td>{{ cliente.nombre }}</td>
+                        <td>{{ cliente.whatsapp }}</td>
+                        <td>{{ cliente.reservas }}</td>
+                        <td>{{ cliente.personas }}</td>
+                        <td>{{ cliente.ultima_visita }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td class="empty" colspan="5">No hay clientes registrados para este periodo.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

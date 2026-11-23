@@ -21,6 +21,7 @@
         <h1>Panel de Administración - Los Girasoles</h1>
         <div>
             <span>Hola, <strong>{{ session['username'] }}</strong></span> | 
+            <a href="{{ url_for('modulo_clientes') }}" style="color: #FFD43B;">Clientes y reportes</a> |
             <a href="/logout" style="color: #ff6b6b;">Cerrar sesión</a>
         </div>
     </div>

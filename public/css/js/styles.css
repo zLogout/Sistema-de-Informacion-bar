@@ -345,6 +345,23 @@ p{margin:0}
   font-size: 13px;
 }
 
+.booking-message {
+  margin-top: 20px;
+  padding: 12px 14px;
+  border: 1px solid #745A20;
+  border-radius: 8px;
+}
+
+.booking-error {
+  color: #FFF8E5;
+  background: #4A3510;
+}
+
+.booking-success {
+  color: #FFF8E5;
+  background: #31501B;
+}
+
 .mapa-contenedor {
   position: relative;
   width: 100%;

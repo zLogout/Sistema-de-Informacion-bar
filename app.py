@@ -1,6 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from calendar import monthrange
+from datetime import date, time, timedelta
+
+from flask import Flask, abort, render_template, request, redirect, url_for, session
 from conexion_db import (
-    crear_tablas, cargar_carta, conectar, crear_reserva, listar_carta, listar_reservas,
+    crear_tablas, cargar_carta, conectar, crear_reserva, listar_carta, listar_reservas_clientes,
     crear_admin_por_defecto, verificar_usuario, listar_productos_admin, listar_categorias,
     agregar_producto, editar_producto, eliminar_producto
 )
@@ -16,11 +19,44 @@ def home():
 
 @app.route("/reservas", methods=["GET"])
 def mostrar_reservas():
-    return render_template("reservas.html")
+    return render_template(
+        "reservas.html",
+        error=None,
+        reservada=request.args.get("reservada") == "1",
+    )
 
 @app.route("/reservas", methods=["POST"])
 def guardar_reserva():
-    None
+    nombre = request.form.get("nombre", "").strip()
+    whatsapp = request.form.get("whatsapp", "").strip()
+    fecha_ingresada = request.form.get("fecha", "")
+    hora_ingresada = request.form.get("hora", "")
+    personas_ingresadas = request.form.get("personas", "")
+
+    if not nombre or not whatsapp:
+        return render_template(
+            "reservas.html",
+            error="Escribe tu nombre y número de WhatsApp para continuar.",
+            reservada=False,
+        )
+
+    try:
+        fecha = date.fromisoformat(fecha_ingresada).isoformat()
+        hora = time.fromisoformat(hora_ingresada).strftime("%H:%M")
+        personas = int(personas_ingresadas)
+        if personas < 1:
+            raise ValueError
+    except ValueError:
+        return render_template(
+            "reservas.html",
+            error="Revisa la fecha, la hora y el número de personas.",
+            reservada=False,
+        )
+
+    with conectar() as conn:
+        crear_reserva(conn, nombre, whatsapp, fecha, hora, personas)
+
+    return redirect(url_for("mostrar_reservas", reservada=1))
 
 # --- RUTAS DE INICIO DE SESIÓN ---
 @app.route("/login", methods=["GET", "POST"])
@@ -66,6 +102,72 @@ def panel_admin():
         categorias = listar_categorias(conn)
         
     return render_template("admin.html", productos=productos, categorias=categorias)
+
+
+@app.route("/admin/clientes")
+def modulo_clientes():
+    if "usuario_id" not in session or session.get("rol") != "admin":
+        return redirect(url_for("login"))
+
+    periodo = request.args.get("periodo", "todos")
+    hoy = date.today()
+    rangos = {
+        "semana": (
+            hoy - timedelta(days=hoy.weekday()),
+            hoy - timedelta(days=hoy.weekday()) + timedelta(days=6),
+            "Semana actual",
+        ),
+        "mes": (
+            hoy.replace(day=1),
+            hoy.replace(day=monthrange(hoy.year, hoy.month)[1]),
+            "Mes actual",
+        ),
+        "año": (
+            hoy.replace(month=1, day=1),
+            hoy.replace(month=12, day=31),
+            "Año actual",
+        ),
+        "todos": (None, None, "Todo el historial"),
+    }
+    if periodo not in rangos:
+        abort(400)
+
+    fecha_inicio, fecha_fin, periodo_nombre = rangos[periodo]
+    with conectar() as conn:
+        reservas = listar_reservas_clientes(
+            conn,
+            fecha_inicio.isoformat() if fecha_inicio else None,
+            fecha_fin.isoformat() if fecha_fin else None,
+        )
+
+    clientes_por_whatsapp = {}
+    for reserva in reservas:
+        whatsapp = reserva["whatsapp"]
+        cliente = clientes_por_whatsapp.get(whatsapp)
+        if cliente is None:
+            cliente = {
+                "nombre": reserva["nombre"],
+                "whatsapp": whatsapp,
+                "reservas": 0,
+                "ultima_visita": reserva["fecha"],
+                "personas": 0,
+            }
+            clientes_por_whatsapp[whatsapp] = cliente
+        cliente["reservas"] += 1
+        cliente["personas"] += reserva["personas"]
+
+    clientes = list(clientes_por_whatsapp.values())
+    return render_template(
+        "clientes.html",
+        clientes=clientes,
+        periodo=periodo,
+        periodo_nombre=periodo_nombre,
+        fecha_inicio=fecha_inicio,
+        fecha_fin=fecha_fin,
+        total_reservas=len(reservas),
+        total_personas=sum(reserva["personas"] for reserva in reservas),
+    )
+
 
 @app.route("/admin/productos/agregar", methods=["POST"])
 def ruta_agregar_producto():
