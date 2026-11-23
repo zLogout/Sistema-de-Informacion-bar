@@ -12,6 +12,7 @@
         .btn-add { background: #FFD43B; color: #161006; }
         .btn-edit { background: #F2A33A; color: #161006; }
         .btn-del { background: #8A3B1F; color: #FFF8E5; }
+        .btn-export { display: inline-block; padding: 10px 14px; margin-right: 8px; border-radius: 4px; background: #FFD43B; color: #161006; font-weight: bold; text-decoration: none; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 10px; border-bottom: 1px solid #333; text-align: left; }
     </style>
@@ -24,6 +25,13 @@
             <a href="{{ url_for('modulo_clientes') }}" style="color: #FFD43B;">Clientes y reportes</a> |
             <a href="/logout" style="color: #ff6b6b;">Cerrar sesión</a>
         </div>
+    </div>
+
+    <div class="card">
+        <h3>Exportar datos</h3>
+        <p>Descarga todas las tablas. Importa el SQL en una base MySQL vacía para evitar conflictos.</p>
+        <a class="btn-export" href="{{ url_for('exportar_datos', formato='sql') }}">Descargar SQL para MySQL</a>
+        <a class="btn-export" href="{{ url_for('exportar_datos', formato='csv') }}">Descargar CSV (ZIP)</a>
     </div>
 
     <div class="card">

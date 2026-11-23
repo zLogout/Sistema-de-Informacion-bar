@@ -1,8 +1,12 @@
+import csv
 import re
 from calendar import monthrange
-from datetime import date, time, timedelta
+from datetime import date, datetime, time, timedelta
+from decimal import Decimal
+from io import BytesIO, StringIO
+import zipfile
 
-from flask import Flask, abort, render_template, request, redirect, url_for, session
+from flask import Flask, abort, render_template, request, redirect, url_for, session, send_file
 from conexion_db import (
     crear_tablas, cargar_carta, conectar, crear_reserva, listar_carta, listar_reservas_clientes,
     crear_admin_por_defecto, verificar_usuario, listar_productos_admin, listar_categorias,
@@ -11,6 +15,37 @@ from conexion_db import (
 
 app = Flask(__name__, static_folder="public", static_url_path="")
 app.secret_key = "clave_super_secreta_del_bar"
+
+EXPORT_TABLES = {
+    "categorias": (
+        ("id", "nombre"),
+        "CREATE TABLE `categorias` (`id` INT NOT NULL AUTO_INCREMENT, `nombre` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`), UNIQUE KEY `uq_categorias_nombre` (`nombre`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+    ),
+    "productos": (
+        ("id", "categoria_id", "nombre", "precio", "stock"),
+        "CREATE TABLE `productos` (`id` INT NOT NULL AUTO_INCREMENT, `categoria_id` INT NOT NULL, `nombre` VARCHAR(255) NOT NULL, `precio` DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (`precio` >= 0), `stock` INT NOT NULL DEFAULT 0 CHECK (`stock` >= 0), PRIMARY KEY (`id`), UNIQUE KEY `uq_productos_categoria_nombre` (`categoria_id`, `nombre`), CONSTRAINT `fk_productos_categoria` FOREIGN KEY (`categoria_id`) REFERENCES `categorias` (`id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+    ),
+    "promociones": (
+        ("id", "titulo", "descripcion", "dias", "horario", "activa"),
+        "CREATE TABLE `promociones` (`id` INT NOT NULL AUTO_INCREMENT, `titulo` VARCHAR(255) NOT NULL, `descripcion` TEXT NULL, `dias` TEXT NULL, `horario` TEXT NULL, `activa` BOOLEAN NOT NULL DEFAULT TRUE, PRIMARY KEY (`id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+    ),
+    "reservas": (
+        ("id", "nombre", "whatsapp", "fecha", "hora", "personas", "estado"),
+        "CREATE TABLE `reservas` (`id` INT NOT NULL AUTO_INCREMENT, `nombre` VARCHAR(255) NOT NULL, `whatsapp` VARCHAR(255) NOT NULL, `fecha` VARCHAR(10) NOT NULL, `hora` VARCHAR(5) NOT NULL, `personas` INT NOT NULL CHECK (`personas` > 0), `estado` VARCHAR(50) NOT NULL DEFAULT 'Pendiente' CHECK (`estado` IN ('Pendiente','Confirmada','Cancelada')), PRIMARY KEY (`id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+    ),
+    "ventas": (
+        ("id", "fecha_hora", "total"),
+        "CREATE TABLE `ventas` (`id` INT NOT NULL AUTO_INCREMENT, `fecha_hora` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, `total` DECIMAL(10,2) NOT NULL DEFAULT 0, PRIMARY KEY (`id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+    ),
+    "usuarios": (
+        ("id", "username", "password", "rol"),
+        "CREATE TABLE `usuarios` (`id` INT NOT NULL AUTO_INCREMENT, `username` VARCHAR(255) NOT NULL, `password` VARCHAR(255) NOT NULL, `rol` VARCHAR(50) NOT NULL DEFAULT 'admin', PRIMARY KEY (`id`), UNIQUE KEY `uq_usuarios_username` (`username`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+    ),
+    "detalle_venta": (
+        ("id", "venta_id", "producto_id", "cantidad", "precio_unitario"),
+        "CREATE TABLE `detalle_venta` (`id` INT NOT NULL AUTO_INCREMENT, `venta_id` INT NOT NULL, `producto_id` INT NOT NULL, `cantidad` INT NOT NULL CHECK (`cantidad` > 0), `precio_unitario` DECIMAL(10,2) NOT NULL, PRIMARY KEY (`id`), CONSTRAINT `fk_detalle_venta_venta` FOREIGN KEY (`venta_id`) REFERENCES `ventas` (`id`), CONSTRAINT `fk_detalle_venta_producto` FOREIGN KEY (`producto_id`) REFERENCES `productos` (`id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+    ),
+}
 
 
 def normalizar_whatsapp(valor):
@@ -125,6 +160,70 @@ def panel_admin():
         categorias = listar_categorias(conn)
         
     return render_template("admin.html", productos=productos, categorias=categorias)
+
+
+def _mysql_literal(value):
+    if value is None:
+        return "NULL"
+    if isinstance(value, bool):
+        return "1" if value else "0"
+    if isinstance(value, (int, float, Decimal)):
+        return str(value)
+    if isinstance(value, (date, datetime, time)):
+        value = value.isoformat(sep=" ") if isinstance(value, datetime) else value.isoformat()
+    escaped = str(value).replace("\\", "\\\\").replace("'", "''")
+    return f"'{escaped}'"
+
+
+@app.route("/admin/exportar/<formato>")
+def exportar_datos(formato):
+    if "usuario_id" not in session or session.get("rol") != "admin":
+        return redirect(url_for("login"))
+    if formato not in {"sql", "csv"}:
+        abort(404)
+
+    with conectar() as conn:
+        datos = {}
+        for tabla, (columnas, _) in EXPORT_TABLES.items():
+            seleccion = ", ".join(f'"{columna}"' for columna in columnas)
+            datos[tabla] = conn.execute(
+                f'SELECT {seleccion} FROM "{tabla}" ORDER BY "id"'
+            ).fetchall()
+
+    if formato == "sql":
+        lineas = [
+            "-- Exportación para MySQL 8.0 o posterior",
+            "SET NAMES utf8mb4;",
+        ]
+        lineas.extend(ddl for _, ddl in EXPORT_TABLES.values())
+        for tabla, (columnas, _) in EXPORT_TABLES.items():
+            for fila in datos[tabla]:
+                valores = ", ".join(_mysql_literal(fila[columna]) for columna in columnas)
+                campos = ", ".join(f"`{columna}`" for columna in columnas)
+                lineas.append(f"INSERT INTO `{tabla}` ({campos}) VALUES ({valores});")
+        contenido = "\n".join(lineas) + "\n"
+        return send_file(
+            BytesIO(contenido.encode("utf-8")),
+            mimetype="application/sql",
+            as_attachment=True,
+            download_name="respaldo_bar_mysql.sql",
+        )
+
+    archivo = BytesIO()
+    with zipfile.ZipFile(archivo, "w", zipfile.ZIP_DEFLATED) as comprimido:
+        for tabla, (columnas, _) in EXPORT_TABLES.items():
+            texto = StringIO(newline="")
+            escritor = csv.DictWriter(texto, fieldnames=columnas)
+            escritor.writeheader()
+            escritor.writerows(datos[tabla])
+            comprimido.writestr(f"{tabla}.csv", "\ufeff" + texto.getvalue())
+    archivo.seek(0)
+    return send_file(
+        archivo,
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name="respaldo_bar_csv.zip",
+    )
 
 
 @app.route("/admin/clientes")

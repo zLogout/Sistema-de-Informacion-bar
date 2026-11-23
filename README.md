@@ -68,4 +68,6 @@
 - `GET /` — muestra la página principal.
 - `GET /reservas` — muestra el formulario de reservas.
 - `POST /reservas` — ruta preparada para recibir los datos del formulario.
+- `GET /admin/exportar/sql` — descarga un respaldo SQL compatible con MySQL para importar en una base vacía (solo administradores).
+- `GET /admin/exportar/csv` — descarga un ZIP con un CSV por tabla (solo administradores).
 
