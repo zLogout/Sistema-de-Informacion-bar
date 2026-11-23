@@ -361,8 +361,7 @@ p{margin:0}
     padding-bottom: 56.25%; /* Relación 16:9 */
     height: 0;
     overflow: hidden;
-    display: flex;
-    justify-content: center;
+    margin: 24px auto 0 auto;
   }
 
   .mapa-contenedor iframe {
