@@ -252,11 +252,13 @@ p{margin:0}
 
  Booking Page Styles
  
-hr.solid {
+.solid {
+  display: block;
+  width: 100%;
   height: 1px;
   margin: 0;
   border: 0;
-  background: #27274f;
+  background-color: #27274f;
 }
 
 .booking-page {
