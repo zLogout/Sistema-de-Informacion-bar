@@ -74,12 +74,12 @@ def listar_reservas(conn):
 def listar_reservas_clientes(conn, fecha_inicio=None, fecha_fin=None):
     if fecha_inicio is None and fecha_fin is None:
         return conn.execute(
-            "SELECT nombre, whatsapp, fecha, hora, personas, estado "
+            "SELECT id, nombre, whatsapp, fecha, hora, personas, estado "
             "FROM reservas ORDER BY fecha DESC, hora DESC, id DESC"
         ).fetchall()
 
     return conn.execute(
-        "SELECT nombre, whatsapp, fecha, hora, personas, estado "
+        "SELECT id, nombre, whatsapp, fecha, hora, personas, estado "
         "FROM reservas WHERE fecha >= %s AND fecha <= %s "
         "ORDER BY fecha DESC, hora DESC, id DESC",
         (fecha_inicio, fecha_fin),

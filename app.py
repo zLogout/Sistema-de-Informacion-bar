@@ -1,3 +1,4 @@
+import re
 from calendar import monthrange
 from datetime import date, time, timedelta
 
@@ -10,6 +11,20 @@ from conexion_db import (
 
 app = Flask(__name__, static_folder="public", static_url_path="")
 app.secret_key = "clave_super_secreta_del_bar"
+
+
+def normalizar_whatsapp(valor):
+    valor = valor.strip()
+    if not valor:
+        return ""
+    if not re.fullmatch(r"\+?[\d\s().-]+", valor):
+        return None
+
+    digitos = re.sub(r"\D", "", valor)
+    if not 7 <= len(digitos) <= 15:
+        return None
+    return ("+" if valor.startswith("+") else "") + digitos
+
 
 @app.route('/')
 def home():
@@ -33,10 +48,18 @@ def guardar_reserva():
     hora_ingresada = request.form.get("hora", "")
     personas_ingresadas = request.form.get("personas", "")
 
-    if not nombre or not whatsapp:
+    if not nombre:
         return render_template(
             "reservas.html",
-            error="Escribe tu nombre y número de WhatsApp para continuar.",
+            error="Escribe tu nombre para continuar.",
+            reservada=False,
+        )
+
+    whatsapp = normalizar_whatsapp(whatsapp)
+    if whatsapp is None:
+        return render_template(
+            "reservas.html",
+            error="El WhatsApp debe ser un número válido de 7 a 15 dígitos.",
             reservada=False,
         )
 
@@ -142,17 +165,27 @@ def modulo_clientes():
 
     clientes_por_whatsapp = {}
     for reserva in reservas:
-        whatsapp = reserva["whatsapp"]
-        cliente = clientes_por_whatsapp.get(whatsapp)
+        whatsapp = normalizar_whatsapp(reserva["whatsapp"] or "")
+        if whatsapp is None:
+            clave_cliente = f"registro-{reserva['id']}"
+            whatsapp_mostrado = "Dato no válido"
+        elif not whatsapp:
+            clave_cliente = f"registro-{reserva['id']}"
+            whatsapp_mostrado = "No proporcionado"
+        else:
+            clave_cliente = whatsapp
+            whatsapp_mostrado = whatsapp
+
+        cliente = clientes_por_whatsapp.get(clave_cliente)
         if cliente is None:
             cliente = {
                 "nombre": reserva["nombre"],
-                "whatsapp": whatsapp,
+                "whatsapp": whatsapp_mostrado,
                 "reservas": 0,
                 "ultima_visita": reserva["fecha"],
                 "personas": 0,
             }
-            clientes_por_whatsapp[whatsapp] = cliente
+            clientes_por_whatsapp[clave_cliente] = cliente
         cliente["reservas"] += 1
         cliente["personas"] += reserva["personas"]
 
